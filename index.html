@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공학용 계산기</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #0f0f13;
+            padding: 20px;
+        }
+
+        .calculator {
+            background: #1a1a24;
+            border-radius: 24px;
+            padding: 24px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+            border: 1px solid #2a2a3a;
+        }
+
+        .display {
+            background: #0d0d14;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: flex-end;
+            border: 1px solid #252535;
+            overflow: hidden;
+        }
+
+        .display .expression {
+            color: #6b6b80;
+            font-size: 16px;
+            min-height: 24px;
+            word-break: break-all;
+            text-align: right;
+            width: 100%;
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+
+        .display .result {
+            color: #ffffff;
+            font-size: 36px;
+            font-weight: 300;
+            min-height: 44px;
+            word-break: break-all;
+            text-align: right;
+            width: 100%;
+            margin-top: 4px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            letter-spacing: -0.5px;
+            transition: color 0.2s;
+        }
+
+        .display .result.error {
+            color: #ff4757;
+        }
+
+        .mode-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            padding: 4px;
+            background: #0d0d14;
+            border-radius: 12px;
+            border: 1px solid #252535;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: #6b6b80;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mode-btn.active {
+            background: #2d5aff;
+            color: #fff;
+        }
+
+        .mode-btn:hover:not(.active) {
+            color: #a0a0b8;
+        }
+
+        .sci-buttons {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .sci-btn {
+            padding: 12px 6px;
+            border: 1px solid #252535;
+            border-radius: 10px;
+            background: #141420;
+            color: #7c8aff;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-align: center;
+        }
+
+        .sci-btn:hover {
+            background: #1c1c30;
+            border-color: #3a3a55;
+        }
+
+        .sci-btn:active {
+            background: #252540;
+            transform: scale(0.95);
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 18px 8px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-align: center;
+            user-select: none;
+        }
+
+        .btn:hover {
+            filter: brightness(1.15);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn.number {
+            background: #242438;
+            color: #e8e8f0;
+        }
+
+        .btn.number:hover {
+            background: #2e2e48;
+        }
+
+        .btn.operator {
+            background: #1e2a4a;
+            color: #4a8aff;
+        }
+
+        .btn.operator:hover {
+            background: #263560;
+        }
+
+        .btn.func {
+            background: #1e1e30;
+            color: #a0a0b8;
+        }
+
+        .btn.func:hover {
+            background: #282840;
+        }
+
+        .btn.equals {
+            background: #2d5aff;
+            color: #fff;
+        }
+
+        .btn.equals:hover {
+            background: #3f6aff;
+        }
+
+        .btn.zero {
+            grid-column: span 2;
+        }
+
+        .memory-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .mem-btn {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #252535;
+            border-radius: 8px;
+            background: #141420;
+            color: #6b6b80;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-align: center;
+        }
+
+        .mem-btn:hover {
+            background: #1c1c30;
+            color: #a0a0b8;
+        }
+
+        .mem-btn:active {
+            transform: scale(0.95);
+        }
+
+        @media (max-width: 420px) {
+            .calculator {
+                padding: 16px;
+                border-radius: 20px;
+            }
+            .btn {
+                padding: 14px 6px;
+                font-size: 16px;
+                border-radius: 10px;
+            }
+            .display .result {
+                font-size: 28px;
+            }
+            .sci-btn {
+                padding: 10px 4px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="display">
+            <div class="expression" id="expression"></div>
+            <div class="result" id="result">0</div>
+        </div>
+
+        <div class="mode-toggle">
+            <button class="mode-btn active" data-mode="deg" onclick="setMode('deg')">DEG</button>
+            <button class="mode-btn" data-mode="rad" onclick="setMode('rad')">RAD</button>
+            <button class="mode-btn" data-mode="grad" onclick="setMode('grad')">GRAD</button>
+        </div>
+
+        <div class="sci-buttons" id="sciButtons">
+            <button class="sci-btn" onclick="insertFn('sin(')">sin</button>
+            <button class="sci-btn" onclick="insertFn('cos(')">cos</button>
+            <button class="sci-btn" onclick="insertFn('tan(')">tan</button>
+            <button class="sci-btn" onclick="insertFn('log(')">log</button>
+            <button class="sci-btn" onclick="insertFn('ln(')">ln</button>
+            <button class="sci-btn" onclick="insertFn('asin(')">sin⁻¹</button>
+            <button class="sci-btn" onclick="insertFn('acos(')">cos⁻¹</button>
+            <button class="sci-btn" onclick="insertFn('atan(')">tan⁻¹</button>
+            <button class="sci-btn" onclick="insertFn('sqrt(')">√</button>
+            <button class="sci-btn" onclick="insertFn('cbrt(')">∛</button>
+            <button class="sci-btn" onclick="insertFn('abs(')">|x|</button>
+            <button class="sci-btn" onclick="insertFn('floor(')">⌊x⌋</button>
+            <button class="sci-btn" onclick="insertFn('ceil(')">⌈x⌉</button>
+            <button class="sci-btn" onclick="insertFn('exp(')">eˣ</button>
+            <button class="sci-btn" onclick="insertFn('!')">x!</button>
+            <button class="sci-btn" onclick="insertConst('PI')">π</button>
+            <button class="sci-btn" onclick="insertConst('E')">e</button>
+            <button class="sci-btn" onclick="insertFn('^2')">x²</button>
+            <button class="sci-btn" onclick="insertFn('^3')">x³</button>
+            <button class="sci-btn" onclick="insertFn('^(')">xʸ</button>
+        </div>
+
+        <div class="memory-row">
+            <button class="mem-btn" onclick="mc()">MC</button>
+            <button class="mem-btn" onclick="mr()">MR</button>
+            <button class="mem-btn" onclick="mPlus()">M+</button>
+            <button class="mem-btn" onclick="mMinus()">M−</button>
+            <button class="mem-btn" onclick="ms()">MS</button>
+        </div>
+
+        <div class="buttons">
+            <button class="btn func" onclick="clearAll()">AC</button>
+            <button class="btn func" onclick="backspace()">⌫</button>
+            <button class="btn func" onclick="insertOp('%')">%</button>
+            <button class="btn operator" onclick="insertOp('/')">÷</button>
+
+            <button class="btn number" onclick="insertNum('7')">7</button>
+            <button class="btn number" onclick="insertNum('8')">8</button>
+            <button class="btn number" onclick="insertNum('9')">9</button>
+            <button class="btn operator" onclick="insertOp('*')">×</button>
+
+            <button class="btn number" onclick="insertNum('4')">4</button>
+            <button class="btn number" onclick="insertNum('5')">5</button>
+            <button class="btn number" onclick="insertNum('6')">6</button>
+            <button class="btn operator" onclick="insertOp('-')">−</button>
+
+            <button class="btn number" onclick="insertNum('1')">1</button>
+            <button class="btn number" onclick="insertNum('2')">2</button>
+            <button class="btn number" onclick="insertNum('3')">3</button>
+            <button class="btn operator" onclick="insertOp('+')">+</button>
+
+            <button class="btn number" onclick="insertFn('neg')">+/−</button>
+            <button class="btn number" onclick="insertNum('0')">0</button>
+            <button class="btn number" onclick="insertNum('.')">.</button>
+            <button class="btn equals" onclick="calculate()">=</button>
+        </div>
+    </div>
+
+    <script>
+        let expression = '';
+        let result = '0';
+        let memory = 0;
+        let angleMode = 'deg';
+        let justCalculated = false;
+
+        const resultDisplay = document.getElementById('result');
+        const expressionDisplay = document.getElementById('expression');
+
+        function setMode(mode) {
+            angleMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+        }
+
+        function toRadians(x) {
+            if (angleMode === 'deg') return x * Math.PI / 180;
+            if (angleMode === 'grad') return x * Math.PI / 200;
+            return x;
+        }
+
+        function fromRadians(x) {
+            if (angleMode === 'deg') return x * 180 / Math.PI;
+            if (angleMode === 'grad') return x * 200 / Math.PI;
+            return x;
+        }
+
+        function insertNum(n) {
+            if (justCalculated) { clearAll(); justCalculated = false; }
+            expression += n;
+            updateDisplay();
+        }
+
+        function insertOp(op) {
+            if (justCalculated) justCalculated = false;
+            if (expression.length === 0 && op === '-') { expression = '-'; updateDisplay(); return; }
+            const last = expression.slice(-1);
+            if ('+-*/%'.includes(last)) {
+                expression = expression.slice(0, -1) + op;
+            } else {
+                expression += op;
+            }
+            updateDisplay();
+        }
+
+        function insertFn(fn) {
+            if (justCalculated) { clearAll(); justCalculated = false; }
+            expression += fn;
+            updateDisplay();
+        }
+
+        function insertConst(c) {
+            if (justCalculated) { clearAll(); justCalculated = false; }
+            expression += c === 'PI' ? Math.PI.toString() : Math.E.toString();
+            updateDisplay();
+        }
+
+        function backspace() {
+            if (justCalculated) { clearAll(); justCalculated = false; return; }
+            expression = expression.slice(0, -1);
+            updateDisplay();
+        }
+
+        function clearAll() {
+            expression = '';
+            result = '0';
+            justCalculated = false;
+            updateDisplay();
+            resultDisplay.classList.remove('error');
+        }
+
+        function updateDisplay() {
+            let disp = expression || '';
+            disp = disp.replace(/\*/g, '×').replace(/\//g, '÷');
+            expressionDisplay.textContent = disp;
+            resultDisplay.textContent = result;
+        }
+
+        function calculate() {
+            if (!expression) return;
+
+            try {
+                let expr = expression;
+                expr = expr.replace(/(\d+)!/g, (_, n) => `factorial(${n})`);
+                expr = expr.replace(/neg/g, '(-');
+                expr = expr.replace(/\^/g, '**');
+
+                const safeEval = new Function(
+                    'sin', 'cos', 'tan', 'asin', 'acos', 'atan',
+                    'sqrt', 'cbrt', 'log', 'ln', 'abs',
+                    'floor', 'ceil', 'exp', 'factorial',
+                    'toRadians', 'fromRadians',
+                    'PI', 'E',
+                    `return (${expr})`
+                );
+
+                const val = safeEval(
+                    (x) => Math.sin(toRadians(parseFloat(x))),
+                    (x) => Math.cos(toRadians(parseFloat(x))),
+                    (x) => Math.tan(toRadians(parseFloat(x))),
+                    (x) => fromRadians(Math.asin(clamp(x, -1, 1))),
+                    (x) => fromRadians(Math.acos(clamp(x, -1, 1))),
+                    (x) => fromRadians(Math.atan(parseFloat(x))),
+                    (x) => Math.sqrt(parseFloat(x)),
+                    (x) => Math.cbrt(parseFloat(x)),
+                    (x) => Math.log10(parseFloat(x)),
+                    (x) => Math.log(parseFloat(x)),
+                    (x) => Math.abs(parseFloat(x)),
+                    (x) => Math.floor(parseFloat(x)),
+                    (x) => Math.ceil(parseFloat(x)),
+                    (x) => Math.exp(parseFloat(x)),
+                    (n) => {
+                        n = parseInt(n);
+                        if (n < 0) throw new Error('음수 팩토리얼');
+                        if (n > 170) return Infinity;
+                        let r = 1;
+                        for (let i = 2; i <= n; i++) r *= i;
+                        return r;
+                    },
+                    toRadians,
+                    fromRadians,
+                    Math.PI,
+                    Math.E
+                );
+
+                if (!isFinite(val)) {
+                    result = '오류';
+                    resultDisplay.classList.add('error');
+                } else {
+                    result = formatNumber(val);
+                    resultDisplay.classList.remove('error');
+                }
+                justCalculated = true;
+                expressionDisplay.textContent = expression.replace(/\*/g, '×').replace(/\//g, '÷') + ' =';
+                resultDisplay.textContent = result;
+
+            } catch (e) {
+                result = '오류';
+                resultDisplay.classList.add('error');
+                updateDisplay();
+            }
+        }
+
+        function clamp(x, min, max) {
+            x = parseFloat(x);
+            if (x < min) return min;
+            if (x > max) return max;
+            return x;
+        }
+
+        function formatNumber(n) {
+            if (Number.isInteger(n) && Math.abs(n) < 1e15) return n.toString();
+            if (Math.abs(n) < 1e-10) return '0';
+            const s = n.toPrecision(12);
+            let str = String(parseFloat(s));
+            if (str.length > 18) {
+                return n.toExponential(6);
+            }
+            return str;
+        }
+
+        function mc() { memory = 0; }
+        function mr() {
+            if (justCalculated) { clearAll(); justCalculated = false; }
+            expression += memory.toString();
+            updateDisplay();
+        }
+        function mPlus() {
+            if (result !== '오류') memory += parseFloat(result) || 0;
+        }
+        function mMinus() {
+            if (result !== '오류') memory -= parseFloat(result) || 0;
+        }
+        function ms() {
+            if (result !== '오류') memory = parseFloat(result) || 0;
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key >= '0' && e.key <= '9') { insertNum(e.key); return; }
+            if (e.key === '.') { insertNum('.'); return; }
+            if (e.key === '+') { insertOp('+'); return; }
+            if (e.key === '-') { insertOp('-'); return; }
+            if (e.key === '*') { insertOp('*'); return; }
+            if (e.key === '/') { insertOp('/'); return; }
+            if (e.key === '%') { insertOp('%'); return; }
+            if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); calculate(); return; }
+            if (e.key === 'Backspace') { e.preventDefault(); backspace(); return; }
+            if (e.key === 'Escape') { clearAll(); return; }
+            if (e.key === '(' || e.key === ')') { insertFn(e.key); return; }
+        });
+    </script>
+</body>
+</html>
